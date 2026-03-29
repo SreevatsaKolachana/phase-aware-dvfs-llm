@@ -1,0 +1,13 @@
+
+models/
+
+data/sharegpt_raw/
+
+__pycache__/
+
+*.pyc
+
+.conda/
+
+*.zip
+
