@@ -16,18 +16,22 @@ This project investigates phase-aware dynamic voltage and frequency scaling (DVF
 - Results validated on two models: Qwen2.5-7B-Instruct and Mistral-7B-Instruct
 
 ## Code Organization
+```
 src/
 ├── run_benchmark.py     # Baseline phase-aware benchmark (TTFT, TBT, energy)
 ├── run_dvfs.py          # DVFS simulation (3 policies + throttle sweep)
 ├── submit_job.sh        # LSF job script for baseline benchmark
 └── submit_dvfs.sh       # LSF job script for DVFS simulation
+
 results/
 ├── figures/             # All plots (comparison, Pareto, sweep, EDP)
 ├── tables/              # Summary CSVs per model per policy
 └── logs/                # Raw per-prompt measurement CSVs
+
 data/
-├── sharegpt_bucketed_n40.json    # 40 prompts/bucket for baseline
-└── sharegpt_bucketed_n20_dvfs.json  # 20 prompts/bucket for DVFS
+├── sharegpt_bucketed_n40.json        # 40 prompts/bucket for baseline
+└── sharegpt_bucketed_n20_dvfs.json   # 20 prompts/bucket for DVFS
+```
 
 ## Experimental Setup
 
