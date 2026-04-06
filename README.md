@@ -1,6 +1,5 @@
 # Phase-Aware DVFS Scheduling for Energy-Efficient LLM Inference
-
-**ECE 592: Generative AI/ML — NC State University**  
+  
 **Author:** Sreevatsa Kolachana (svkolach)
 
 ## Overview
