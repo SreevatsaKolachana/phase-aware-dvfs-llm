@@ -1,6 +1,5 @@
 """
 DVFS Simulation for Phase-Aware LLM Inference
-==============================================
 Since we cannot change GPU clocks on Hazel (no root access),
 we simulate DVFS by inserting calibrated delays during decode.
 
@@ -29,9 +28,7 @@ import torch
 from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
 import pynvml
 
-# ============================================================
 # CONFIG
-# ============================================================
 PROJECT_DIR = os.path.dirname(os.path.abspath(__file__))
 RESULTS_DIR = os.path.join(PROJECT_DIR, "results")
 FIGURES_DIR = os.path.join(RESULTS_DIR, "figures")
@@ -70,9 +67,7 @@ CONFIG = {
 }
 
 
-# ============================================================
 # GPU POWER SAMPLER (same as baseline)
-# ============================================================
 class GPUPowerSampler:
     def __init__(self, gpu_index=0, interval_ms=50):
         self.gpu_index = gpu_index
@@ -130,9 +125,7 @@ class GPUPowerSampler:
         return float(np.trapz([s[1] for s in subset], [s[0] for s in subset]))
 
 
-# ============================================================
 # MODEL LOADING
-# ============================================================
 def load_model_and_tokenizer(model_id, use_4bit=True, hf_token=None):
     print(f"Loading model: {model_id} (4bit={use_4bit})")
     t0 = time.time()
@@ -158,9 +151,7 @@ def load_model_and_tokenizer(model_id, use_4bit=True, hf_token=None):
     return tokenizer, model
 
 
-# ============================================================
 # WARMUP
-# ============================================================
 def warmup_gpu(model, tokenizer, num_warmup=3):
     print(f"Warming up GPU with {num_warmup} passes...")
     warmup_prompt = "Hello, this is a warmup prompt for the GPU."
@@ -179,10 +170,7 @@ def warmup_gpu(model, tokenizer, num_warmup=3):
     torch.cuda.empty_cache()
     print("Warmup complete.")
 
-
-# ============================================================
 # DATASET
-# ============================================================
 def prepare_dataset(tokenizer, config):
     prompts_file = os.path.join(DATA_DIR, f"sharegpt_bucketed_n{config['samples_per_bucket']}_dvfs.json")
 
@@ -231,10 +219,7 @@ def prepare_dataset(tokenizer, config):
         json.dump(sampled, f, indent=2)
     return sampled
 
-
-# ============================================================
 # CORE: DVFS-AWARE BENCHMARK
-# ============================================================
 def run_dvfs_benchmark(model, tokenizer, prompt, bucket, policy,
                        max_new_tokens=128, gpu_index=0,
                        prefill_delay_ms=0.0, decode_delay_ms=0.0):
@@ -263,7 +248,7 @@ def run_dvfs_benchmark(model, tokenizer, prompt, bucket, policy,
     generated_token_ids = []
     tbt_list = []
 
-    # ---- PREFILL ----
+    # PREFILL
     torch.cuda.synchronize()
     t_prefill_start = time.perf_counter()
 
@@ -325,7 +310,7 @@ def run_dvfs_benchmark(model, tokenizer, prompt, bucket, policy,
     t_decode_end = time.perf_counter()
     sampler.stop()
 
-    # ---- METRICS ----
+    # METRICS
     total_time = t_decode_end - t_prefill_start
     decode_time = t_decode_end - t_decode_start
     gen_count = len(generated_token_ids)
@@ -365,10 +350,7 @@ def run_dvfs_benchmark(model, tokenizer, prompt, bucket, policy,
         "tbt_trace_ms": (tbt_arr * 1000).tolist(),
     }
 
-
-# ============================================================
 # PLOTTING: DVFS COMPARISON (IMPROVED)
-# ============================================================
 def generate_dvfs_plots(results_df, model_name):
     """Generate comparison plots across DVFS policies with improved Pareto frontiers."""
 
@@ -417,7 +399,7 @@ def generate_dvfs_plots(results_df, model_name):
     plt.savefig(os.path.join(FIGURES_DIR, f"dvfs_comparison_{model_name}.png"), dpi=150)
     plt.close()
 
-    # ── 2. Energy breakdown: prefill vs decode per policy ──
+    # 2. Energy breakdown: prefill vs decode per policy 
     fig, axes = plt.subplots(1, len(policies), figsize=(6 * len(policies), 5))
     if len(policies) == 1:
         axes = [axes]
@@ -451,10 +433,10 @@ def generate_dvfs_plots(results_df, model_name):
     plt.savefig(os.path.join(FIGURES_DIR, f"dvfs_power_{model_name}.png"), dpi=150)
     plt.close()
 
-    # ── 4. IMPROVED Pareto: Mean points with error bars + frontier line ──
+    # 4. IMPROVED Pareto: Mean points with error bars + frontier line 
     fig, axes = plt.subplots(1, 2, figsize=(15, 6))
 
-    # --- 4a. Energy vs TTFT Pareto ---
+    # 4a. Energy vs TTFT Pareto 
     ax = axes[0]
     pareto_points_x = []
     pareto_points_y = []
@@ -518,7 +500,7 @@ def generate_dvfs_plots(results_df, model_name):
     ax.legend(handles=legend_elements, fontsize=8, loc="upper left")
     ax.grid(True, alpha=0.3)
 
-    # --- 4b. Energy vs Throughput Pareto ---
+    # 4b. Energy vs Throughput Pareto
     ax = axes[1]
     pareto_points_x2 = []
     pareto_points_y2 = []
@@ -584,7 +566,7 @@ def generate_dvfs_plots(results_df, model_name):
     plt.savefig(os.path.join(FIGURES_DIR, f"dvfs_edp_{model_name}.png"), dpi=150)
     plt.close()
 
-    # ── 6. Throttle sweep with improved styling ──
+    # 6. Throttle sweep with improved styling 
     if "throttle_level" in results_df.columns:
         sweep_df = results_df[results_df["policy"] == "phase_aware"]
         if len(sweep_df) > 0:
@@ -658,9 +640,7 @@ def generate_dvfs_plots(results_df, model_name):
     print(f"DVFS plots saved to {FIGURES_DIR}")
 
 
-# ============================================================
 # MAIN
-# ============================================================
 def main():
     print("=" * 60)
     print("DVFS Simulation Benchmark")
@@ -698,14 +678,14 @@ def main():
     delay_ms = CONFIG["throttle_delays_ms"][throttle_key]
     print(f"\nThrottle level: {throttle_key} ({delay_ms}ms decode delay)")
 
-    # ── Define the three policies ──
+    # Define the three policies
     policies = {
         "default":     {"prefill_delay_ms": 0.0,      "decode_delay_ms": 0.0},
         "static":      {"prefill_delay_ms": delay_ms,  "decode_delay_ms": delay_ms},
         "phase_aware": {"prefill_delay_ms": 0.0,       "decode_delay_ms": delay_ms},
     }
 
-    # ── Run all policies ──
+    # Run all policies 
     all_results = []
     total_runs = len(policies) * sum(len(v) for v in prompts.values())
     run_idx = 0
@@ -747,7 +727,7 @@ def main():
 
     results_df = pd.DataFrame(all_results)
 
-    # ── Also run a throttle sweep with phase_aware at different levels ──
+    # Also run a throttle sweep with phase_aware at different levels 
     print(f"\n{'#'*60}")
     print(f"# THROTTLE SWEEP (phase_aware at all delay levels)")
     print(f"{'#'*60}")
@@ -773,13 +753,13 @@ def main():
 
     results_df = pd.DataFrame(all_results)
 
-    # ── Save results ──
+    # Save results
     save_df = results_df.drop(columns=["tbt_trace_ms"], errors="ignore")
     csv_path = os.path.join(LOGS_DIR, f"dvfs_results_{model_name}.csv")
     save_df.to_csv(csv_path, index=False)
     print(f"\nSaved: {csv_path}")
 
-    # ── Summary per policy ──
+    # Summary per policy
     summary_cols = [
         "input_tokens", "generated_tokens", "ttft_ms", "tbt_p95_ms",
         "tokens_per_sec", "ms_per_token",
@@ -800,7 +780,7 @@ def main():
         print(f"{'='*80}")
         print(summary.to_string())
 
-    # ── Compute savings ──
+    # Compute savings 
     print(f"\n{'='*80}")
     print(f"ENERGY SAVINGS COMPARISON")
     print(f"{'='*80}")
@@ -833,7 +813,7 @@ def main():
             summary = pdf.groupby("bucket")[summary_cols].mean().round(3)
             summary.to_csv(os.path.join(TABLES_DIR, f"dvfs_summary_{model_name}_{policy}.csv"))
 
-    # ── Plots ──
+    # Plots 
     generate_dvfs_plots(results_df, model_name)
 
     print("\nDVFS simulation complete!")
