@@ -1,6 +1,5 @@
 """
 Phase-Aware LLM Inference Benchmark for NCSU Hazel HPC
-=======================================================
 Runs on A100 GPUs via LSF job scheduler.
 Measures prefill/decode phases separately with continuous power sampling.
 """
@@ -19,9 +18,8 @@ import torch
 from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
 import pynvml
 
-# ============================================================
+
 # CONFIG
-# ============================================================
 PROJECT_DIR = os.path.dirname(os.path.abspath(__file__))
 RESULTS_DIR = os.path.join(PROJECT_DIR, "results")
 FIGURES_DIR = os.path.join(RESULTS_DIR, "figures")
@@ -46,9 +44,7 @@ CONFIG = {
 }
 
 
-# ============================================================
 # GPU POWER SAMPLER
-# ============================================================
 class GPUPowerSampler:
     """Background thread polling GPU power via NVML every interval_ms."""
 
@@ -108,9 +104,8 @@ class GPUPowerSampler:
         return float(np.trapz([s[1] for s in subset], [s[0] for s in subset]))
 
 
-# ============================================================
+
 # DATASET PREPARATION
-# ============================================================
 def prepare_dataset(tokenizer, config):
     """Download ShareGPT, extract first user turns, bucket by token length."""
     from datasets import load_dataset
@@ -174,9 +169,7 @@ def prepare_dataset(tokenizer, config):
     return sampled
 
 
-# ============================================================
 # MODEL LOADING
-# ============================================================
 def load_model_and_tokenizer(model_id, use_4bit=True, hf_token=None):
     print(f"Loading model: {model_id} (4bit={use_4bit})")
     t0 = time.time()
@@ -205,9 +198,7 @@ def load_model_and_tokenizer(model_id, use_4bit=True, hf_token=None):
     return tokenizer, model
 
 
-# ============================================================
 # PHASE-AWARE BENCHMARK
-# ============================================================
 def run_phase_aware_benchmark(model, tokenizer, prompt, bucket,
                                max_new_tokens=128, gpu_index=0):
     inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
@@ -224,7 +215,7 @@ def run_phase_aware_benchmark(model, tokenizer, prompt, bucket,
     generated_token_ids = []
     tbt_list = []
 
-    # ---- PREFILL ----
+    # PREFILL
     torch.cuda.synchronize()
     t_prefill_start = time.perf_counter()
 
@@ -243,7 +234,7 @@ def run_phase_aware_benchmark(model, tokenizer, prompt, bucket,
     generated_token_ids.append(next_token_id.item())
     ttft = t_prefill_end - t_prefill_start
 
-    # ---- DECODE ----
+    # DECODE
     current_token = next_token_id
     t_decode_start = time.perf_counter()
     t_prev = t_decode_start
@@ -276,7 +267,7 @@ def run_phase_aware_benchmark(model, tokenizer, prompt, bucket,
     t_decode_end = time.perf_counter()
     sampler.stop()
 
-    # ---- METRICS ----
+    # METRICS
     total_time = t_decode_end - t_prefill_start
     decode_time = t_decode_end - t_decode_start
     gen_count = len(generated_token_ids)
@@ -315,9 +306,7 @@ def run_phase_aware_benchmark(model, tokenizer, prompt, bucket,
     }
 
 
-# ============================================================
 # PLOTTING
-# ============================================================
 def generate_plots(results_df):
     """Generate all plots and save to figures directory."""
 
@@ -382,9 +371,7 @@ def generate_plots(results_df):
     print(f"Plots saved to {FIGURES_DIR}")
 
 
-# ============================================================
 # WARMUP
-# ============================================================
 def warmup_gpu(model, tokenizer, num_warmup=3):
     """
     Run a few throwaway inference passes to warm up the GPU.
@@ -419,9 +406,8 @@ def warmup_gpu(model, tokenizer, num_warmup=3):
     print("Warmup complete.")
 
 
-# ============================================================
+
 # MAIN
-# ============================================================
 # List of models to benchmark. Each entry: (display_name, local_path)
 # Add more models here — just download them on the login node first.
 MODELS = [
