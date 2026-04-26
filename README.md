@@ -275,17 +275,6 @@ Each experiment produces:
 - **Summary tables** (`results/tables/`): Averaged metrics per (policy, bucket)
 - **Figures** (`results/figures/`): Comparison bar charts, throttle sweeps, Pareto plots
 
-## Citation
-
-```bibtex
-@article{kolachana2026dvfs,
-  title={Phase-Aware DVFS Scheduling for Energy-Efficient Large Language Model Inference},
-  author={Kolachana, Sreevatsa},
-  journal={ECE 592 Course Project, NC State University},
-  year={2026}
-}
-```
-
 ## License
 
 This project is for academic purposes (ECE 592 course project at NC State University).
