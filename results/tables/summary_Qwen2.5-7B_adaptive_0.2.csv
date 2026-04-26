@@ -1,0 +1,4 @@
+bucket,input_tokens,generated_tokens,ttft_ms,tbt_p95_ms,tbt_max_ms,tokens_per_sec,energy_total_j,avg_power_w,edp,delay_mean_ms,slo_violations
+long,561.95,128.0,425.899,55.894,92.865,17.305,615.776,83.529,4556.592,6.378,0.3
+medium,143.4,128.0,169.989,56.213,130.939,17.81,588.905,82.261,4235.811,6.37,0.35
+short,24.0,128.0,111.633,55.702,97.593,18.14,578.349,82.287,4082.181,6.431,0.1
